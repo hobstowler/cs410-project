@@ -8,3 +8,5 @@ class SentimentAnalyzer:
             self.pipeline = pipeline(model=model_name)
 
         self.raw_data = data
+
+    def run
