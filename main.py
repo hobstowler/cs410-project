@@ -9,7 +9,18 @@ models = {
     'amazon-fine-tune': 'LiYuan/amazon-review-sentiment-analysis'
 }
 
-# Define the function for each command
+def init(args):
+    raw_dir = os.path.join(os.getcwd(), 'raw')
+    processed_dir = os.path.join(os.getcwd(), 'processed')
+
+    if not os.path.exists(raw_dir):
+        print('Directory "raw" does not exist. Creating it...')
+        os.mkdir(raw_dir)
+
+    if not os.path.exists(processed_dir):
+        print('Directory "processed" does not exist. Creating it...')
+        os.mkdir(processed_dir)
+
 def load(args):
     print(f"Loading data from {args.file}.")
     filepath = os.path.join(os.getcwd(), 'raw', args.file)
@@ -19,7 +30,7 @@ def load(args):
         _run_sentiment_analysis(processed_filepath)
 
 def run(args):
-    print("Running the process...")
+    print("Running the sentiment analysis...")
 
 
 def _run_sentiment_analysis(filepath):
@@ -38,12 +49,18 @@ def list_available_data_sets():
         raise FileNotFoundError(
             'Raw directory not found. The `raw` directory must be present at the top level of the project.')
 
+def list_available_models():
+    pass
+
 # Create the main parser
 def main():
     parser = argparse.ArgumentParser(description="A program that can load Amazon user review data sets, process, and run sentiment analysis on the text of the review.")
     subparsers = parser.add_subparsers(dest="command", help="Subcommands")
 
-    load_parser = subparsers.add_parser('load', help="Load the data")
+    init_parser = subparsers.add_parser('init', help='Initialize the directories.')
+    init_parser.set_defaults(func=init)
+
+    load_parser = subparsers.add_parser('load', help="Load the selected data set.")
     load_parser.add_argument('-f', '--file', type=str, help="The data file to load from the raw directory. Use the list command to see available data sets.", required=True)
     load_parser.add_argument('-k', '--keys', type=str, help="Valid keys from the source data separated by commas.", default='rating,text,timestamp,verified_purchase,images')
     load_parser.add_argument('-r', '--run', action='store_true', help="Run the sentiment analysis after processing the file.")
@@ -53,8 +70,11 @@ def main():
     run_parser.add_argument('-f', '--file', type=str, help="The processed file from the load command.", required=False)
     run_parser.set_defaults(func=run)
 
-    list_parser = subparsers.add_parser('list', help="List the items")
+    list_parser = subparsers.add_parser('list', help="List the available data sets in the 'raw' directory.")
     list_parser.set_defaults(func=list_available_data_sets)
+
+    models_list_parser = subparsers.add_parser('models', help="List the available models.")
+    models_list_parser.set_defaults(func=list_available_models)
 
     args = parser.parse_args()
 
