@@ -9,7 +9,7 @@ class Loader:
         if keys is None:
             keys = ['rating', 'text', 'timestamp', 'verified_purchase', 'images']
 
-        filename = filepath.split('/')[-1].split('.')[0]
+        filename = filepath.split('\\')[-1].split('.')[0]
         new_filepath = os.path.join(os.getcwd(), 'processed', f'{filename}.json')
 
         data = []
@@ -18,16 +18,16 @@ class Loader:
             for line in f:
                 item = {k: v for k, v in json.loads(line).items() if k in keys}
 
-                if item.get('image') is not None:
-                    item.pop('image')
-                    item['has_images'] = 1 if len(item['image']) > 0 else 0
+                if item.get('images') is not None:
+                    images = item.pop('images')
+                    item['has_images'] = 1 if len(images) > 0 else 0
 
                 data.append(item)
 
-        with open(new_filepath, 'wb') as f:
+        with open(new_filepath, 'w') as f:
             json.dump(data, f)
 
-        return data, new_filepath
+        return new_filepath
 
 
 if __name__ == '__main__':

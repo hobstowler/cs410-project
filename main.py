@@ -24,7 +24,8 @@ def init(args):
 def load(args):
     print(f"Loading data from {args.file}.")
     filepath = os.path.join(os.getcwd(), 'raw', args.file)
-    _, processed_filepath = Loader.load(filepath, args.keys.split(','))
+    print(type(args.keys))
+    processed_filepath = Loader.load(filepath, args.keys.split(','))
 
     if args.run:
         _run_sentiment_analysis(processed_filepath)
