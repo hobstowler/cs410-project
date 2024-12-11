@@ -2,12 +2,14 @@ import os.path
 import argparse
 
 from loader import Loader
+from sentiment import SentimentAnalyzer
 
-models = {
-    'base': None,
-    'product-base': 'defex/distilgpt2-finetuned-amazon-reviews',
-    'amazon-fine-tune': 'LiYuan/amazon-review-sentiment-analysis'
-}
+
+# models = {
+#     'base': None,
+#     'product-base': 'defex/distilgpt2-finetuned-amazon-reviews',
+#     'amazon-fine-tune': 'LiYuan/amazon-review-sentiment-analysis'
+# }
 
 def init(args):
     raw_dir = os.path.join(os.getcwd(), 'raw')
@@ -24,14 +26,23 @@ def init(args):
 def load(args):
     print(f"Loading data from {args.file}.")
     filepath = os.path.join(os.getcwd(), 'raw', args.file)
-    print(type(args.keys))
+    print(filepath)
     processed_filepath = Loader.load(filepath, args.keys.split(','))
+    print(f'Processed file saved at {processed_filepath}')
 
-    if args.run:
-        _run_sentiment_analysis(processed_filepath)
+    # if args.run:
+    #     _run_sentiment_analysis(processed_filepath)
 
 def run(args):
-    print("Running the sentiment analysis...")
+    print("Running the sentiment analysis.")
+    filepath = os.path.join(os.getcwd(), 'processed', args.file)
+    sent_args = {'filepath': filepath}
+    if args.model == 'vader':
+        sent_args.update({'vader': True})
+    elif args.model == 'textblob':
+        sent_args.update({'textblob': True})
+    sent = SentimentAnalyzer(**sent_args)
+    sent.run()
 
 
 def _run_sentiment_analysis(filepath):
@@ -50,9 +61,6 @@ def list_available_data_sets():
         raise FileNotFoundError(
             'Raw directory not found. The `raw` directory must be present at the top level of the project.')
 
-def list_available_models():
-    pass
-
 # Create the main parser
 def main():
     parser = argparse.ArgumentParser(description="A program that can load Amazon user review data sets, process, and run sentiment analysis on the text of the review.")
@@ -64,18 +72,20 @@ def main():
     load_parser = subparsers.add_parser('load', help="Load the selected data set.")
     load_parser.add_argument('-f', '--file', type=str, help="The data file to load from the raw directory. Use the list command to see available data sets.", required=True)
     load_parser.add_argument('-k', '--keys', type=str, help="Valid keys from the source data separated by commas.", default='rating,text,timestamp,verified_purchase,images')
-    load_parser.add_argument('-r', '--run', action='store_true', help="Run the sentiment analysis after processing the file.")
+    # load_parser.add_argument('-r', '--run', action='store_true', help="Run the sentiment analysis after processing the file.")
     load_parser.set_defaults(func=load)
 
     run_parser = subparsers.add_parser('run', help="Run sentiment analysis on the processed file.")
+    run_parser.add_argument('-m', '--model', choices=['vader', 'textblob'], type=str, help="The model to use for sentiment analysis.", required=True)
     run_parser.add_argument('-f', '--file', type=str, help="The processed file from the load command.", required=False)
+    run_parser.add_argument('-ss', '--sample-size', type=int, help="The size of the random sample to take from the dataset. Default is 10,000.", required=False)
     run_parser.set_defaults(func=run)
 
     list_parser = subparsers.add_parser('list', help="List the available data sets in the 'raw' directory.")
     list_parser.set_defaults(func=list_available_data_sets)
 
-    models_list_parser = subparsers.add_parser('models', help="List the available models.")
-    models_list_parser.set_defaults(func=list_available_models)
+    # models_list_parser = subparsers.add_parser('models', help="List the available models.")
+    # models_list_parser.set_defaults(func=list_available_models)
 
     args = parser.parse_args()
 

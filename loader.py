@@ -9,7 +9,7 @@ class Loader:
         if keys is None:
             keys = ['rating', 'text', 'timestamp', 'verified_purchase', 'images']
 
-        filename = filepath.split('\\')[-1].split('.')[0]
+        filename = os.path.basename(filepath).split('.')[0]
         new_filepath = os.path.join(os.getcwd(), 'processed', f'{filename}.json')
 
         data = []

@@ -16,32 +16,30 @@ class SentimentAnalyzer:
     text_blob = False
     vader = False
 
-    def __init__(self, file_name: str, sample_size=10000, hugging_face: any = False, text_blob=False, vader=False, device=None):
-        if device is None:
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            print(f'Using {device}.')
-
+    def __init__(self, filepath: str, sample_size=10000, hugging_face: any = False, text_blob=False, vader=False, device=None):
         if not hugging_face and not text_blob and not vader:
             raise InputError('Model not specified')
 
         if hugging_face:
             self.hugging_face = hugging_face
+            if device is None:
+                device = 'cuda' if torch.cuda.is_available() else 'cpu'
+                print(f'Using {device}.')
+
             try:
                 self.pipeline = pipeline('sentiment-analysis', model=hugging_face, device=device, truncation=True)
             except AssertionError as e:
                 print(e)
                 print(f'Using cpu instead.')
                 self.pipeline = pipeline('sentiment-analysis', model=hugging_face, device='cpu', truncation=True)
-
-        if text_blob:
+        elif text_blob:
             self.text_blob = text_blob
             self.model_name = 'textblob'
-
-        if vader:
+        elif vader:
             self.vader = vader
             self.model_name = 'vader'
 
-        self.file_name = file_name
+        self.filepath = filepath
         self.sample_size = sample_size
 
     def run(self):
@@ -52,19 +50,29 @@ class SentimentAnalyzer:
         text = self._get_text(sample_data)
 
         # run the analysis
+        print('Running sentiment analysis...', end='')
         sentiment = self._analyze_sentiment(text)
         combined_data = [{**z1, **z2} for z1, z2 in zip(sample_data, sentiment)]
+        print('Done.')
 
         # sort into buckets based on rating
+        print('Sorting results into buckets based on given rating...', end='')
         buckets = self._sort_sentiment_by_rating(combined_data)
         buckets.update({'all': combined_data})
+        print('Done.')
 
         #output intermediate results
-        filename = os.path.join(os.getcwd(), 'analyzed', f'{self.file_name.split(".")[0]}_{self.model_name.replace("/", "_")}.json')
+        print('Saving intermediate results...', end='')
+        basename = os.path.basename(self.filepath)
+        filename = os.path.join(os.getcwd(), 'analyzed', f'{basename.split(".")[0]}_{self.model_name.replace("/", "_")}.json')
         self._output_to_file(filename, buckets)
 
+        print('Calculating performance and accuracy...', end='')
         performance = {k: self._calculate_error(k, bucket) for k, bucket in buckets.items()}
-        filename = os.path.join(os.getcwd(), 'analyzed', f'{self.file_name.split(".")[0]}_{self.model_name.replace("/", "_")}_results.json')
+        print('Done.')
+
+        print('Saving final results...', end='')
+        filename = os.path.join(os.getcwd(), 'analyzed', f'{basename.split(".")[0]}_{self.model_name.replace("/", "_")}_results.json')
         self._output_to_file(filename, performance)
 
     def _calculate_error(self, actual_score: float, bucket: list):
@@ -81,7 +89,9 @@ class SentimentAnalyzer:
         return {'size': len(bucket), 'mae': round(float(mae), 4), 'rmse': round(float(rmse), 4), 'acc': round(float(acc), 4)}
 
     def _load_file(self):
-        data = json.load(open(fr'processed\{self.file_name}'))
+        data = json.load(open(self.filepath))
+
+        print(f'Sampling data with sample size of {self.sample_size}.')
         sample_data = random.sample(data, self.sample_size)
 
         return sample_data
@@ -130,11 +140,13 @@ class SentimentAnalyzer:
         with open(filename, 'w') as f:
             json.dump(buckets, f)
 
+        print(f'Output stored at {filename}')
+
 
 if __name__ == '__main__':
     # data = json.load(open(r'processed\Digital_Music.json'))
     # s = SentimentAnalyzer(file_name='Digital_Music.json', hugging_face='siebert/sentiment-roberta-large-english', device='cuda')
-    s = SentimentAnalyzer(file_name='Digital_Music.json', text_blob=True, device='cuda')
+    s = SentimentAnalyzer(filepath='Digital_Music.json', text_blob=True, device='cuda')
     # s = SentimentAnalyzer(file_name='Digital_Music.json', vader=True, device='cuda')
     s.run()
     # analyzer = SentimentIntensityAnalyzer()
