@@ -1,3 +1,23 @@
+# About
+
+This project uses scraped Amazon reviews from 1996 to 2023 collected by [McAuley Lab](https://cseweb.ucsd.edu/~jmcauley/) in 2023. [link](https://amazon-reviews-2023.github.io/)
+
+> **Citation for data sources:**
+> 
+> **Article**: hou2024bridging
+> 
+> **Title:** Bridging Language and Items for Retrieval and Recommendation
+> 
+> **Authors:** Hou, Yupeng and Li, Jiacheng and He, Zhankui and Yan, An and Chen, Xiusi and McAuley, Julian 
+> 
+> **Journal:** arXiv preprint arXiv:2403.03952
+> 
+> **Year:** 2024
+
+Using [VADER](https://github.com/cjhutto/vaderSentiment) (Valence Aware Dictionary and sEntiment Reasoner) and [TextBlob](https://textblob.readthedocs.io/) this project attempts to assess the sentiment of the text of Amazon product reviews and evaluate whether the user-provided rating lines up with the sentiment rating.
+
+The success of the models is evaluated based on traditional methods of evaluating language models such as Root Mean Squared Error (RMSE) and Mean Absolute Error (MAE) as well as a measure of the accuracy of the sentiment when compared to the user rating, expressed as a simple percentage of "correct" ratings from the model.
+
 # Instructions
 
 ## Installation
