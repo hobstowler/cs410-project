@@ -30,9 +30,6 @@ def load(args):
     processed_filepath = Loader.load(filepath, args.keys.split(','))
     print(f'Processed file saved at {processed_filepath}')
 
-    # if args.run:
-    #     _run_sentiment_analysis(processed_filepath)
-
 def run(args):
     print("Running the sentiment analysis.")
     filepath = os.path.join(os.getcwd(), 'processed', args.file)
@@ -43,10 +40,6 @@ def run(args):
         sent_args.update({'textblob': True})
     sent = SentimentAnalyzer(**sent_args)
     sent.run()
-
-
-def _run_sentiment_analysis(filepath):
-    pass
 
 
 def list_available_data_sets():
